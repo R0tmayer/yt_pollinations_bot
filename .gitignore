@@ -1,6 +1,18 @@
+# User-specific
 output/
 promts.txt
 .env
+
+# macOS
+.DS_Store
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -10,4 +22,10 @@ env/
 venv/
 build/
 dist/
-*.egg-info/ 
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.tox/
+
+# Cursor
+.cursor/ 
