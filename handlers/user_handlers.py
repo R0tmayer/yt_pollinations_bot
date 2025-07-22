@@ -5,6 +5,7 @@ from keyboards import main_menu_kb
 from services.user_service import is_user_allowed
 from supabase import create_client
 import os
+from states import UserStates
 
 user_router = Router()
 
@@ -38,12 +39,16 @@ async def back_to_main_menu(message: types.Message, state: FSMContext):
 
 @user_router.message(F.text == "👤 Выдать доступ")
 async def ask_username(message: types.Message, state: FSMContext):
-    await message.answer("Введите username пользователя (без @):")
-    await state.set_state("wait_username_to_add")
+    await message.answer("Введите username пользователя (можно как с @ так и без)")
+    await state.set_state(UserStates.wait_username_to_add)
 
-@user_router.message(F.state == "wait_username_to_add")
+@user_router.message(UserStates.wait_username_to_add)
 async def add_user_to_db(message: types.Message, state: FSMContext):
     username = message.text.strip().lstrip("@")
-    supabase.table("users").insert({"username": username}).execute()
+    # Получаем максимальный id
+    resp = supabase.table("users").select("id").order("id", desc=True).limit(1).execute()
+    max_id = resp.data[0]["id"] if resp.data else 0
+    new_id = max_id + 1
+    supabase.table("users").insert({"id": new_id, "username": username}).execute()
     await message.answer(f"Пользователь @{username} добавлен в базу.")
     await state.clear() 

@@ -9,4 +9,7 @@ class GenStates(StatesGroup):
     edit_ref_image = State()
     edit_enhance = State()
     edit_transparent = State()
-    wait_file = State() 
+    wait_file = State()
+
+class UserStates(StatesGroup):
+    wait_username_to_add = State() 
