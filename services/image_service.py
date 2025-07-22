@@ -1,14 +1,11 @@
 import urllib.parse
 import ssl
 
-API_KEY = None  # Значение будет установлено в main.py через импорт
+API_KEY = None
 
 async def generate_image(session, prompt, params):
-    """Отправляет запрос к Pollinations API и возвращает изображение."""
     encoded_prompt = urllib.parse.quote(prompt)
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-    
-    # Готовим параметры: убираем None и конвертируем bool в "true"
     final_params = {}
     for k, v in params.items():
         if v is None:
@@ -16,10 +13,8 @@ async def generate_image(session, prompt, params):
         if isinstance(v, bool):
             if v:
                 final_params[k] = "true"
-            # Если False, просто не добавляем параметр
         else:
             final_params[k] = v
-    
     headers = {"Authorization": f"Bearer {API_KEY}"}
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False

@@ -2,3 +2,4 @@ python-dotenv
 requests
 aiogram
 aiohttp 
+supabase
