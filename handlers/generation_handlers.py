@@ -135,8 +135,8 @@ async def edit_transparent(message: types.Message, state: FSMContext):
 
 @generation_router.message(GenStates.menu, F.document)
 async def handle_file(message: types.Message, state: FSMContext, bot):
-    user_id = message.from_user.id
-    if is_user_locked(user_id):
+    username = message.from_user.username
+    if is_user_locked(username):
         await message.answer("Ваш предыдущий запрос ещё не готов. Пожалуйста, дождитесь завершения.")
         return
     doc = message.document
@@ -157,7 +157,7 @@ async def handle_file(message: types.Message, state: FSMContext, bot):
         if len(prompts) > 50:
             await status_msg.edit_text("❗️В одном файле может быть не более 50 промтов.")
             return
-        дock_user(user_id, ex=300)
+        lock_user(username)
         try:
             images_dir = os.path.join(tmpdir, "images")
             os.makedirs(images_dir, exist_ok=True)
@@ -185,11 +185,11 @@ async def handle_file(message: types.Message, state: FSMContext, bot):
             with open(zip_path, "rb") as zipf:
                 await message.answer_document(
                     types.FSInputFile(zipf.name, filename="images.zip"),
-                    caption="✅ Ваш архив с картинками готов! Спасибо за использование бота.\n\n🏠 Для возврата в меню используйте кнопку ниже.",
+                    caption="✅ Ваш архив с картинками готов! Спасибо за использование бота.\n\n",
                     reply_markup=main_menu_kb()
                 )
             await status_msg.delete()
         finally:
-            unlock_user(user_id)
+            unlock_user(username)
     await state.clear()
 
