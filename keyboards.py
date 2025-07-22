@@ -1,9 +1,11 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-def main_menu_kb():
+def main_menu_kb(is_admin=False):
     kb = ReplyKeyboardBuilder()
     kb.button(text="✨ Создать шедевр")
+    if is_admin:
+        kb.button(text="👤 Выдать доступ")
     return kb.as_markup(resize_keyboard=True, is_persistent=True)
 
 def back_kb():
