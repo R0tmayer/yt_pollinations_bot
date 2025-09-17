@@ -1,14 +1,17 @@
 import os
 import json
 import asyncio
+from dotenv import load_dotenv
+
+# Load environment variables before importing modules that rely on them
+load_dotenv()
+
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from dotenv import load_dotenv
 from handlers.user_handlers import user_router
 from handlers.generation_handlers import generation_router
 from services import image_service
 
-load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Expect JSON array of tokens in POLLINATIONS_API_TOKENS.
