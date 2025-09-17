@@ -7,7 +7,11 @@ API_TOKENS = []
 
 
 async def generate_image(session, prompt, params):
-    encoded_prompt = urllib.parse.quote(prompt)
+    print("GENERATION_START")
+    # Prefix prompt with a random number to avoid server-side caching for identical prompts
+    random_prefix = str(random.randint(100000, 999999))
+    prompt_with_noise = f"{random_prefix} {prompt}"
+    encoded_prompt = urllib.parse.quote(prompt_with_noise)
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
     final_params = {}
     for k, v in params.items():
@@ -29,7 +33,7 @@ async def generate_image(session, prompt, params):
             url, params=final_params, headers=headers, ssl=ssl_context, timeout=300
         ) as response:
             response.raise_for_status()
-            return await response.read()
+            data = await response.read()
+            return data
     except Exception as e:
-        print(f"Ошибка генерации для промта '{prompt}': {e}")
         return None
