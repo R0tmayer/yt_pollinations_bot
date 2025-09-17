@@ -19,11 +19,12 @@ This repository contains a simple Python script for generating images using the 
    ```bash
    pip install -r requirements.txt
    ```
-3. **Add your Pollinations API key:**
-   - Create a file named `.env` in the project root:
+3. **Add your Pollinations API tokens (required):**
+   - Create a file named `.env` in the project root with a JSON array of tokens:
      ```
-     POLLINATIONS_API_KEY=your_api_key_here
+     POLLINATIONS_API_TOKENS=["token1","token2","token3"]
      ```
+   - The bot picks a random token for each request.
 4. **Add prompts:**
    - Create a file named `promts.txt` in the project root. Each line should be a separate prompt.
 5. **Run the script:**

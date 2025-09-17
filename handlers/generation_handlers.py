@@ -36,7 +36,7 @@ async def show_params_menu(message, state):
         params_text += f"\n<b>💨 Прозрачный фон:</b> {'Да' if params.get('transparent') else 'Нет'}"
     await message.answer(
         f"⚙️ <b>Параметры генерации:</b>\n\n{params_text}\n\n"
-        f"Как будете готовы, просто прикрепите .txt файл с промтами",
+        f"Когда будете готовы, просто отправьте текст для генерации или прикрепите .txt файл с промтами.",
         reply_markup=params_menu_kb(show_transparent=(params.get('model') == 'gptimage')),
         parse_mode='HTML'
     )
@@ -52,24 +52,31 @@ async def start_gen(message: types.Message, state: FSMContext):
 @generation_router.message(GenStates.menu, F.text)
 async def params_menu_handler(message: types.Message, state: FSMContext):
     text = message.text
+    # Управляющие кнопки меню
     if text.startswith("🎨"):
         await message.answer("Выберите модель из списка:", reply_markup=model_kb())
         await state.set_state(GenStates.edit_model)
+        return
     elif text.startswith("🎲"):
         await message.answer("Введите seed (любое целое число) или оставьте по умолчанию.", reply_markup=skip_kb())
         await state.set_state(GenStates.edit_seed)
+        return
     elif text.startswith("↔️"):
         await message.answer("Введите желаемую ширину изображения в пикселях.", reply_markup=skip_kb())
         await state.set_state(GenStates.edit_width)
+        return
     elif text.startswith("↕️"):
         await message.answer("Введите желаемую высоту изображения в пикселях.", reply_markup=skip_kb())
         await state.set_state(GenStates.edit_height)
+        return
     elif text.startswith("🖼️"):
         await message.answer("Отправьте прямую ссылку (URL) на изображение-референс или оставьте поле пустым.", reply_markup=skip_kb())
         await state.set_state(GenStates.edit_ref_image)
+        return
     elif text.startswith("🔮"):
         await message.answer("Хотите, чтобы нейросеть улучшила ваши промты для более детализированного результата?", reply_markup=yes_no_kb())
         await state.set_state(GenStates.edit_enhance)
+        return
     elif text.startswith("💨"):
         data = await state.get_data()
         if data.get("params", {}).get("model") != "gptimage":
@@ -77,6 +84,31 @@ async def params_menu_handler(message: types.Message, state: FSMContext):
             return
         await message.answer("Создать изображение с прозрачным фоном?", reply_markup=yes_no_kb())
         await state.set_state(GenStates.edit_transparent)
+        return
+    # Если это не управляющая кнопка — считаем это промтом для генерации
+    username = message.from_user.username
+    if is_user_locked(username):
+        await message.answer("Ваш предыдущий запрос ещё не готов. Пожалуйста, дождитесь завершения.")
+        return
+    user_data = await state.get_data()
+    params = user_data.get("params", DEFAULT_PARAMS.copy())
+    status_msg = await message.answer("✨ Промт получен! Генерирую изображение... ⏳")
+    lock_user(username)
+    try:
+        async with aiohttp.ClientSession() as session:
+            img = await generate_image(session, text, params)
+        if not img:
+            await status_msg.edit_text("❗️Не удалось сгенерировать изображение. Попробуйте другой промт.")
+            return
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_img:
+            tmp_img.write(img)
+            tmp_img_path = tmp_img.name
+        await status_msg.edit_text("📤 Вот ваше изображение!")
+        await message.answer_photo(types.FSInputFile(tmp_img_path), caption="✅ Ваше изображение готово! Спасибо за использование бота.", reply_markup=main_menu_kb())
+        os.remove(tmp_img_path)
+    finally:
+        unlock_user(username)
+    await state.clear()
 
 async def update_param_and_show_menu(message, state, param_name, value_processor=lambda x: x):
     if message.text == "⬅️ В меню параметров":
